@@ -66,6 +66,7 @@
   </ItemGroup>
   <ItemGroup>
     <Content Include="Gravity.html" />
+    <Content Include="index.html" />
     <Content Include="jquery.min.js" />
     <Content Include="MRRMath.js" />
     <Content Include="TweenLite.min.js" />

@@ -40,6 +40,11 @@
             this.spd = 1;
             this.menuShowing = false;
             this.showGravs = true;
+            this.dotsCheckDots = false;
+            this.mergeTouching = false;
+            this.mergeDistance = 1;
+            this.distMult = 5;
+            this.drawTips = false;
             this.menu = new Menu(this, this.startCount, this.lightSpeed, this.showGravs)
         }
 
@@ -138,37 +143,39 @@
                         this.modObjMotion(this.dots[g], this.gravs[h]);
                     }
 
-                    /*for (var h = dots.length - 1; h > -1; h--) {
-                        if (g != h) {
-    
-                            if (getDistanceFromTo(dots[g].x, dots[g].y, dots[h].x, dots[h].y) < 2)
-                            {
-                                var perc = 1;
-                                var tmp = new MRRVector(0, 0);
-    
-                                if (dots[g].weight > dots[g].weight)
+                    if (this.dotsCheckDots) {
+                        for (var h = this.dots.length - 1; h > -1; h--) {
+                            if (g != h) {
+        
+                                /*if (getDistanceFromTo(dots[g].x, dots[g].y, dots[h].x, dots[h].y) < 2)
                                 {
-                                    perc = dots[g].weight / dots[h].weight;
-                                    tmp = new MRRVector(dots[h].motion.ang, dots[h].motion.mag / perc);
-                                    dots[g].motion = dots[g].motion.addVector(tmp);
+                                    var perc = 1;
+                                    var tmp = new MRRVector(0, 0);
+        
+                                    if (dots[g].weight > dots[g].weight)
+                                    {
+                                        perc = dots[g].weight / dots[h].weight;
+                                        tmp = new MRRVector(dots[h].motion.ang, dots[h].motion.mag / perc);
+                                        dots[g].motion = dots[g].motion.addVector(tmp);
+                                    }
+                                    else
+                                    {
+                                        perc = dots[h].weight / dots[g].weight;
+                                        tmp = new MRRVector(dots[g].motion.ang, dots[g].motion.mag / perc);
+                                        dots[g].motion = dots[h].motion.addVector(tmp);
+                                    }
+        
+                                    dots[g].weight += dots[h];
+        
+                                    dots.splice(h, 1);
                                 }
                                 else
-                                {
-                                    perc = dots[h].weight / dots[g].weight;
-                                    tmp = new MRRVector(dots[g].motion.ang, dots[g].motion.mag / perc);
-                                    dots[g].motion = dots[h].motion.addVector(tmp);
-                                }
-    
-                                dots[g].weight += dots[h];
-    
-                                dots.splice(h, 1);
-                            }
-                            else
-                            {
-                                modObjMotion(dots[g], dots[h]);
+                                {*/
+                                this.modObjMotion(this.dots[g], this.dots[h]);
+                                //}
                             }
                         }
-                    }*/
+                    }
 
                     if (this.dots.length <= g) {
                         g = this.dots.length - 1;
@@ -224,6 +231,59 @@
                     this.drawGrav(this.gravs[g]);
                 }
             }
+
+            if (this.mergeTouching)
+            {
+                for (var g = this.dots.length - 1; g > -1; g--)
+                {
+                    for (var h = this.dots.length - 1; h > -1; h--)
+                    {
+                        if (g != h && getDistanceFromTo(this.dots[g].x, this.dots[g].y, this.dots[h].x, this.dots[h].y) < Math.min(10, Math.max(1, Math.max(this.dots[g].weight, this.dots[h].weight) / 10)))
+                        {
+                            var perc = 1;
+                            var tmp = new MRRVector(0, 0);
+
+                            if (this.dots[g].weight > this.dots[h].weight) {
+                                perc = this.dots[g].weight / this.dots[h].weight;
+                                tmp = new MRRVector(this.dots[h].motion.ang, this.dots[h].motion.mag / perc);
+                                this.dots[g].motion = this.dots[g].motion.addVector(tmp);
+                                this.dots[g].weight += this.dots[h].weight;
+                                this.dots.splice(h, 1);
+                            }
+                            else {
+                                perc = this.dots[h].weight / this.dots[g].weight;
+                                tmp = new MRRVector(this.dots[g].motion.ang, this.dots[g].motion.mag / perc);
+                                this.dots[g].motion = this.dots[h].motion.addVector(tmp);
+                                this.dots[h].weight += this.dots[g].weight;
+                                this.dots.splice(g, 1);
+                            }
+
+
+
+                            if (h >= this.dots.length)
+                            {
+                                h = this.dots.length - 1;
+                            }
+
+                            if (g >= this.dots.length)
+                            {
+                                g = this.dots.length - 1;
+                            }
+                        }
+                    }
+                }
+
+                while(this.dots.length < this.startCount)
+                {
+                    this.dots.push({
+                        x: Math.random() * $(window).width(),
+                        y: Math.random() * $(window).height(),
+                        motion: new MRRVector(0, 0, true),
+                        weight: .5,
+                        hists: []
+                    });
+                }
+            }
         }
 
         Gravity.prototype.drawGrav = function(grav)
@@ -245,7 +305,7 @@
 
             d += getDistanceFromTo(dot.hists[dot.hists.length - 1].x, dot.hists[dot.hists.length - 1].y, dot.x, dot.y);
 
-            var c1 = { r: 50, g: 0, b: 200, a: 100 };
+            var c1 = { r: 50, g: 0, b: 255, a: 100 };
             var c2 = { r: 200, g: 150, b: 0, a: 100 };
 
             var perc = d / 110.0;
@@ -274,7 +334,15 @@
                 }
 
                 this.ctx.lineTo(dot.x, dot.y);
+                
                 this.ctx.stroke();
+
+                if (this.drawTips) {
+                    this.ctx.beginPath();
+
+                    this.ctx.arc(dot.x, dot.y, dot.weight, 0, Math.PI * 2);
+                    this.ctx.stroke();
+                }
             }
             else {
 
@@ -303,7 +371,7 @@
             var c = .01;
             //w = w / 50;
 
-            var d = getDistanceFromTo(obj1.x, obj1.y, obj2.x, obj2.y) * 5;
+            var d = getDistanceFromTo(obj1.x, obj1.y, obj2.x, obj2.y) * this.distMult;
 
             return c * (w / d);
         }
