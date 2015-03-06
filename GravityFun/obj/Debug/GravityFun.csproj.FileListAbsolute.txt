@@ -4,3 +4,9 @@ c:\users\mrodriguez\documents\visual studio 2013\Projects\GravityFun\GravityFun\
 c:\users\mrodriguez\documents\visual studio 2013\Projects\GravityFun\GravityFun\obj\Debug\GravityFun.csprojResolveAssemblyReference.cache
 c:\users\mrodriguez\documents\visual studio 2013\Projects\GravityFun\GravityFun\obj\Debug\GravityFun.dll
 c:\users\mrodriguez\documents\visual studio 2013\Projects\GravityFun\GravityFun\obj\Debug\GravityFun.pdb
+C:\Users\mrodriguez\Documents\GitHub\Gravity\GravityFun\bin\GravityFun.dll.config
+C:\Users\mrodriguez\Documents\GitHub\Gravity\GravityFun\bin\GravityFun.dll
+C:\Users\mrodriguez\Documents\GitHub\Gravity\GravityFun\bin\GravityFun.pdb
+C:\Users\mrodriguez\Documents\GitHub\Gravity\GravityFun\obj\Debug\GravityFun.csprojResolveAssemblyReference.cache
+C:\Users\mrodriguez\Documents\GitHub\Gravity\GravityFun\obj\Debug\GravityFun.dll
+C:\Users\mrodriguez\Documents\GitHub\Gravity\GravityFun\obj\Debug\GravityFun.pdb
