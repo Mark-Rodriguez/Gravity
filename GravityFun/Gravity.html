@@ -1,0 +1,272 @@
+﻿<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+    <title>Gravity</title>
+
+    <script src="jquery.min.js"></script>
+    <script src="MRRMath.js"></script>
+
+    <style>
+        html, body{
+            padding:0px;
+            margin:0px;
+        }
+
+        #canv{
+            background-color:#181818;
+        }
+    </style>
+
+    <script>
+        
+        var canvas = null;
+
+        var ctx = null;
+
+        var dots = [];
+
+        var gravs = [];
+
+        var drawLines = true;
+
+        var spd = 1;
+
+        function onLoad()
+        {
+            canvas = document.createElement("canvas");
+            $(canvas).css({ width: "100%", height: "100%", backgroundColor:"#181818" });
+            $(document.body).append(canvas);
+
+            ctx = canvas.getContext("2d");
+
+            window.setInterval(function () {
+                doFrame();
+            }, 1000 / 24.0);
+
+
+            for (var g = 0; g < 2000; g++)
+            {
+                dots.push({
+                    x:Math.random() * $(window).width(),
+                    y: Math.random() * $(window).height(),
+                    motion:new MRRVector(0, 0, true),
+                    weight: .5,
+                    hists:[]
+                });
+
+            }
+
+            /*$(canvas).click(function (e) {
+                gravs.push({
+                    x: e.pageX,
+                    y: e.pageY,
+                    weight:100
+                });
+            });*/
+
+            var gravInterval = null;
+
+            $(canvas).mousedown(function (e) {
+
+                var grav = { x: e.pageX, y: e.pageY, weight:100 };
+
+                gravs.push(grav);
+
+                gravInterval = window.setInterval(function () {
+                    grav.weight += 2 + (grav.weight * .1);
+                }, 1000 / 34.0);
+            });
+
+            
+            $(canvas).mouseup(function (e) {
+                window.clearInterval(gravInterval);
+            });
+
+            $(window).keydown(function (e) {
+                if (e.keyCode == 38)
+                {
+                    spd = spd + 1;
+                }
+
+                if (e.keyCode == 40)
+                {
+                    spd = spd - 1;
+                }
+            });
+        }
+
+        function doFrame() {
+            canvas.width = $(window).width();
+            canvas.height = $(window).height();
+            //canvas.css({position:"absolute", width:"100%", height:"100%"});
+            //canvas.css("width", $(window).width() + "px")
+            //canvas.css("height", $(window).height() + "px")
+            ctx = canvas.getContext("2d");
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            for (var i = 0; i < spd; i++) {
+                for (var g = dots.length - 1; g > -1; g--) {
+
+                    for (var h = 0; h < gravs.length; h++) {
+                        modObjMotion(dots[g], gravs[h]);
+                    }
+
+                    /*for (var h = dots.length - 1; h > -1; h--) {
+                        if (g != h) {
+    
+                            if (getDistanceFromTo(dots[g].x, dots[g].y, dots[h].x, dots[h].y) < 2)
+                            {
+                                var perc = 1;
+                                var tmp = new MRRVector(0, 0);
+    
+                                if (dots[g].weight > dots[g].weight)
+                                {
+                                    perc = dots[g].weight / dots[h].weight;
+                                    tmp = new MRRVector(dots[h].motion.ang, dots[h].motion.mag / perc);
+                                    dots[g].motion = dots[g].motion.addVector(tmp);
+                                }
+                                else
+                                {
+                                    perc = dots[h].weight / dots[g].weight;
+                                    tmp = new MRRVector(dots[g].motion.ang, dots[g].motion.mag / perc);
+                                    dots[g].motion = dots[h].motion.addVector(tmp);
+                                }
+    
+                                dots[g].weight += dots[h];
+    
+                                dots.splice(h, 1);
+                            }
+                            else
+                            {
+                                modObjMotion(dots[g], dots[h]);
+                            }
+                        }
+                    }*/
+
+                    if (dots.length <= g) {
+                        g = dots.length - 1;
+                    }
+
+                    if (dots[g].motion.mag > 10) {
+                        dots[g].motion.setAngMag(dots[g].motion.ang, 10);
+                    }
+
+                }
+                for (var g = 0; g < dots.length; g++) {
+
+                    dots[g].hists.push({ x: dots[g].x, y: dots[g].y });
+                    if (dots[g].hists.length > 10) {
+                        dots[g].hists.splice(0, 1);
+                    }
+                    dots[g].x += dots[g].motion.x;
+                    dots[g].y += dots[g].motion.y;
+
+                    if (dots[g].x > $(window).width() + 0) {
+                        if (dots[g].motion.x > 0) {
+                            dots[g].motion.setXY(-dots[g].motion.x, dots[g].motion.y);
+                        }
+                    }
+
+                    if (dots[g].x < 0) {
+                        if (dots[g].motion.x < 0) {
+                            dots[g].motion.setXY(-dots[g].motion.x, dots[g].motion.y);
+                        }
+                    }
+
+                    if (dots[g].y > $(window).height() + 0) {
+                        if (dots[g].motion.y > 0) {
+                            dots[g].motion.setXY(dots[g].motion.x, -dots[g].motion.y);
+                        }
+                    }
+
+                    if (dots[g].y < 0) {
+                        if (dots[g].motion.y < 0) {
+                            dots[g].motion.setXY(dots[g].motion.x, -dots[g].motion.y);
+                        }
+                    }
+
+                }
+            }
+
+            for (var g = 0; g < dots.length; g++)
+            {
+                drawDot(dots[g]);
+            }
+
+            for (var g = 0; g < gravs.length; g++)
+            {
+                drawGrav(gravs[g]);
+            }
+        }
+
+        function drawGrav(grav)
+        {
+            ctx.fillStyle = 'rgba(70, 0, 160, .2)';
+            ctx.beginPath();
+            ctx.arc(grav.x, grav.y, (grav.weight / 100), 0, Math.PI * 2);
+            ctx.closePath();
+            ctx.fill();
+        }
+
+        function drawDot(dot)
+        {
+            if (drawLines) {
+                ctx.strokeStyle = 'rgba(255, 255, 255, .4)';
+                ctx.beginPath();
+
+                ctx.moveTo(dot.hists[0].x, dot.hists[0].y);
+
+
+
+                for (var g = 1; g < dot.hists.length; g++) {
+                    ctx.lineTo(dot.hists[g].x, dot.hists[g].y);
+                }
+
+                ctx.lineTo(dot.x, dot.y);
+                ctx.stroke();
+            }
+            else {
+                
+                for (var g = 0; g < dot.hists.length; g++)
+                {
+                    ctx.strokeStyle = 'rgba(255, 255, 255, ' + (g / (dot.hists.length - 1)) + ')';
+                    ctx.beginPath();
+                    ctx.arc(dot.hists[g].x, dot.hists[g].y, dot.weight * 2, 0, Math.PI * 2);
+                    ctx.closePath();
+                    ctx.stroke();
+                }
+                //var c = new document.createElement("canvas");
+    
+                //var ctx = c.getContext("2d");
+                ctx.strokeStyle = '#ffffff';
+                ctx.beginPath();
+                ctx.arc(dot.x, dot.y, dot.weight * 4, 0, Math.PI * 2);
+                ctx.closePath();
+                ctx.stroke();
+            }
+        }
+
+        function getGravBetween(obj1, obj2)
+        {
+            var w = obj1.weight * obj2.weight;
+
+            var c = .01;
+            //w = w / 50;
+
+            var d = getDistanceFromTo(obj1.x, obj1.y, obj2.x, obj2.y) * 5;
+
+            return c * (w / d);
+            //d = Math.max(d, 10);
+
+            //return w / Math.pow((d / 20.0), 2);
+        }
+
+        function modObjMotion(obj1, obj2)
+        {
+            obj1.motion = obj1.motion.addVector(new MRRVector(getAngleFromTo(obj1.x, obj1.y, obj2.x, obj2.y), getGravBetween(obj1, obj2)));
+        }
+    </script>
+</head>
+<body onload="onLoad();">
+</body>
+</html>
