@@ -24,7 +24,7 @@
 
         function onLoad()
         {
-            gravit = new Gravity(2500);
+            gravit = new Gravity(250);
             gravit.init();
         }
 
@@ -40,11 +40,11 @@
             this.spd = 1;
             this.menuShowing = false;
             this.showGravs = true;
-            this.dotsCheckDots = false;
-            this.mergeTouching = false;
+            this.dotsCheckDots = true;
+            this.mergeTouching = true;
             this.mergeDistance = 1;
             this.distMult = 5;
-            this.drawTips = false;
+            this.drawTips = true;
             this.menu = new Menu(this, this.startCount, this.lightSpeed, this.showGravs)
         }
 
@@ -238,7 +238,7 @@
                 {
                     for (var h = this.dots.length - 1; h > -1; h--)
                     {
-                        if (g != h && getDistanceFromTo(this.dots[g].x, this.dots[g].y, this.dots[h].x, this.dots[h].y) < Math.min(10, Math.max(1, Math.max(this.dots[g].weight, this.dots[h].weight) / 10)))
+                        if (g != h && getDistanceFromTo(this.dots[g].x, this.dots[g].y, this.dots[h].x, this.dots[h].y) < Math.min(1, Math.max(1, Math.max(this.dots[g].weight, this.dots[h].weight) / 10)))
                         {
                             var perc = 1;
                             var tmp = new MRRVector(0, 0);
@@ -340,7 +340,7 @@
                 if (this.drawTips) {
                     this.ctx.beginPath();
 
-                    this.ctx.arc(dot.x, dot.y, dot.weight, 0, Math.PI * 2);
+                    this.ctx.arc(dot.x, dot.y, dot.weight / 10, 0, Math.PI * 2);
                     this.ctx.stroke();
                 }
             }
