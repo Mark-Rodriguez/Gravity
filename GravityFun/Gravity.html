@@ -15,6 +15,31 @@
         #canv{
             background-color:#181818;
         }
+        .val-slide
+        {
+            border:solid 1px #808080;
+            background-color:#eeeeee;
+            cursor:pointer;
+        }
+        .val-slide-bar
+        {
+            border:solid 1px #808080;
+            background-color:#eeeeee;
+        }
+
+        .val-slide:hover>.val-slide-bar{
+            border:solid 1px #808080;
+            background-color:#2f7fd5;
+        }
+
+        .no-select
+        {
+            -moz-user-select: none; 
+            -webkit-user-select: none; 
+            -ms-user-select:none; 
+            user-select:none;
+            -o-user-select:none;
+        }
     </style>
 
     <script>
@@ -387,14 +412,139 @@
             this.count = cnt;
             this.lightSpeed = lightSpeed;
             this.showGravs = showGravs;
-            this.cont = $("<div style='position:absolute;top:0px;left:0px;width:100%;height:100%;background-color:rgba(0, 0, 0, .6);'></div>");
+            this.cont = $("<div class='no-select' style='position:absolute;top:0px;left:0px;width:100%;height:100%;background-color:rgba(0, 0, 0, .6);'></div>");
             this.bod = $("<div style='margin:10%;width:80%;height:65%;background-color:white;border-radius:15px;'></div>");
+
+            this.lsSlide = new ValSlide("150px", "15px", 1, 50, 1, "horizontal");
+
+            this.bod.append(this.lsSlide.div);
+
             this.cont.append(this.bod);
         }
 
         Menu.prototype.show = function()
         {
             $(document.body).append(this.cont);
+        }
+
+        function ValSlide(width, height, min, max, increment, orientation)
+        {
+            this.width = width;
+            this.height = height;
+            this.min = min;
+            this.max = max;
+            this.increment = increment;
+            this.orientation = orientation;
+            this.value = min;
+
+            this.hoverColor = "#2f7fd5";
+
+            this.div = $("<div class='val-slide' style='position:relative;width:" + width + ";height:" + height + ";'></div>");
+
+            this.bar = $("<div class='val-slide-bar' style='position:absolute;left:-1px;top:-1px;width:" + (orientation == "vertical" ? width : height) + ";height:" + (orientation == "vertical" ? width : height) + ";'></div>");
+
+            this.div.append(this.bar);
+
+            var self = this;
+
+            this.mm = null;
+            this.mu = null;
+            this.ml = null;
+
+            this.mm = function (t) {
+                if (orientation == "vertical")
+                {
+                }
+                else
+                {
+                    if (t.pageX < self.div.offset().left) {
+                        self.bar.css("left", "-1px");
+                        self.value = min;
+                    }
+                    else
+                    {
+                        if (t.pageX > self.div.offset().left + self.div.width()) {
+                            self.bar.css("left", (self.div.width() - self.bar.width() + 1) + "px")
+                            self.value = max;
+                        }
+                        else {
+                            if (increment == 0) {
+                                self.bar.css("left", Math.max(-1, Math.min((self.div.width() - self.bar.width() + 1), t.pageX - self.div.offset().left - self.bar.width() * .5)) + "px");
+                                var v = Math.max(-1, Math.min((self.div.width() - self.bar.width() + 1), t.pageX - self.div.offset().left - self.bar.width() * .5));
+                                var p = (v + 1) / (self.div.width() - self.bar.width() + 2);
+                                var val = min + ((max - min) * p);
+                                self.value = val;
+                            }
+                            else
+                            {
+                                var v = Math.max(-1, Math.min((self.div.width() - self.bar.width() + 1), t.pageX - self.div.offset().left - self.bar.width() * .5));
+                                var p = (v + 1) / (self.div.width() - self.bar.width() + 2);
+                                var val = min + ((max - min) * p);
+
+                                var fl = Math.floor(val / increment);
+                                var ce = Math.ceil(val / increment);
+
+                                var incCount = 0;
+
+                                if (Math.abs(fl * increment - val) < Math.abs(ce * increment - val))
+                                {
+                                    incCount = fl;
+                                }
+                                else
+                                {
+                                    incCount = ce;
+                                }
+
+                                self.value = incCount * increment;
+
+                                p = ((incCount * increment) - min) / (max - min);
+
+                                p = Math.max(0, Math.min(1, p));
+
+                                self.bar.css("left", ((self.div.width() - self.bar.width() + 1) * p - 1) + "px");
+                            }
+                        }
+                    }
+                }
+            };
+            this.mu = function (t) {
+                self.bar.css("background-color", "");
+                $(window).unbind("mouseup", self.mu);
+                $(window).unbind("mouseleave", self.ml);
+                $(window).unbind("mousemove", self.mm);
+            };
+            this.ml = function (t) {
+                if (t.target != window)
+                {
+                    return;
+                }
+                self.bar.css("background-color", "");
+                $(window).unbind("mouseup", self.mu);
+                $(window).unbind("mouseleave", self.ml);
+                $(window).unbind("mousemove", self.mm);
+            };
+
+            this.md = function (t) {
+                self.bar.css("background-color", self.hoverColor);
+                $(window).mousemove(self.mm);
+                $(window).mouseup(self.mu);
+                $(window).mouseleave(self.ml);
+                self.mm(t);
+            };
+            
+            this.div.mousedown(this.md);
+        }
+
+        ValSlide.prototype.dispose = function()
+        {
+            this.div.unbind("mousedown", this.md);
+            $(window).unbind("mouseup", this.mu);
+            $(window).unbind("mouseleave", this.ml);
+            $(window).unbind("mousemove", this.mm);
+        }
+
+        ValSlide.prototype.divClick = function(e)
+        {
         }
     </script>
 </head>
